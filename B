@@ -1,0 +1,167 @@
+--[[
+  AnimeDice Trade Manager
+  Joury's Meta Script
+]]
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+
+-- 1. Création du Container Principal (Le "Frame" qui contient tout)
+local UI = Instance.new("ScreenGui")
+UI.Name = "AnimeDiceMetaUI"
+UI.DisplayOrder = 1 -- Important pour être au-dessus des boutons
+UI.ResetOnSpawn = false
+UI.Ignore enlargement = true -- Évite qu'on rétrécisse l'écran
+UI.Size = UDim2.new(0, 100, 0, 100) -- On le réduira après
+UI.Position = UDim2.new(0.5, -50, 0.5, -50)
+UI.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+-- 2. Le Frame d'affichage de l'icône (Le carré autour de l'image)
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "TradeFrame"
+MainFrame.BackgroundTransparency = 1
+MainFrame.Size = UDim2.new(0, 0, 0, 0) -- Démène caché
+MainFrame.Position = UDim2.new(0.5, -25, 0.5, 0)
+MainFrame.Parent = UI
+
+-- 3. L'image de l'icône (L'objet flottant)
+local IconImage = Instance.new("ImageLabel")
+IconImage.Name = "Icon"
+IconImage.Size = UDim2.new(1, 0, 1, 0)
+IconImage.IgnoreDescendants = true
+IconImage.BackgroundTransparency = 1
+IconImage.Image = "rbxassetid://..." -- On va le changer plus bas si besoin, ou le faire automatiquement
+    
+-- 4. Le Cadre de sélection (Le rectangle de couleur)
+local SelectionFrame = Instance.new("Frame")
+SelectionFrame.Name = "SelectionFrame"
+SelectionFrame.Parent = MainFrame
+SelectionFrame.BackgroundTransparency = 1
+SelectionFrame.Color = Color3.fromRGB(255, 215, 0) -- Jaune comme dans Dice
+SelectionFrame.Label = "Trade"
+SelectionFrame.Size = UDim2.new(1, 0, 1, 0)
+
+local Card = Instance.new("Frame")
+Card.Name = "Card"
+Card.Parent = SelectionFrame
+Card.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+Card.BorderSizePixel = 0
+Card.BackgroundTransparency = 0.66
+Card.Size = UDim2.new(1, 0, 1, 0)
+Card.Position = UDim2.new(0, 5, 0, 5)
+
+local CardTextLabel = Instance.new("TextLabel")
+CardTextLabel.Text = "1x"
+CardTextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+CardTextLabel.Font = Enum.Font.GothamBold
+CardTextLabel.TextSize = 24
+CardTextLabel.BackgroundTransparency = 1
+CardTextLabel.Size = UDim2.new(1, -4, 1, -4)
+CardTextLabel.Position = UDim2.new(0, 2, 0, 2)
+
+-- 5. Le Cadre de l'autre joueur (Pour que tu v.ois les catégories)
+local PlayerFrame = Instance.new("Frame")
+PlayerFrame.Name = "PlayerFrame"
+PlayerFrame.Parent = MainFrame
+PlayerFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+PlayerFrame.BorderSizePixel = 0
+PlayerFrame.Size = UDim2.new(0, 0, 0, 40) -- Seul le texte est visible
+PlayerFrame.Position = UDim2.new(0, 5, 0, 35)
+
+
+-- 6. Zone des boutons (En bas à gauche par défaut)
+local BtnZone = Instance.new("Frame")
+BtnZone.Name = "BtnZone"
+BtnZone.Parent = MainFrame
+BtnZone.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+BtnZone.BorderSizePixel = 0
+BtnZone.Size = UDim2.new(0, 0, 0, 0) -- Mode auto
+BtnZone.Position = UDim2.new(0, -20, 0, -20)
+BtnZone.Visible = true
+
+local CancelBtn = Instance.new("TextButton")
+CancelBtn.Name = "Cancel"
+CancelBtn.Text = ""
+CancelBtn.Font = Enum.Font.GothamBold
+CancelBtn.BackgroundTransparency = 1
+CancelBtn.Size = UDim2.new(0, 35, 0, 35)
+CancelBtn.Parent = BtnZone
+CancelBtn.ZIndex = 10
+CancelBtn.TextColor3 = Color3.fromRGB(100, 100, 100)
+
+-- 7. Logique d'ouverture (L'IA qui détecte le trade)
+local function OpenUI()
+	-- 1. On zoome le UI
+	UI.Size = UDim2.new(0, 250, 0, 160)
+	UI.Position = UDim2.new(0.5, -125, 0.5, -80)
+	
+	-- 2. On active les boutons
+	CancelBtn.Size = UDim2.new(0, 35, 0, 35)
+	CancelBtn.Position = UDim2.new(0, 5, 0, 60)
+	CancelBtn.BackgroundTransparency = 0
+	
+	-- 3. On affiche le cadre de sélection
+	-- On clone le cadre selon l'événement courrant (Simplifié)
+	SelectionFrame.Visible = true
+	
+	-- 4. On gère le texte "1x" vs "Pair/Impair"
+	local text = CardTextLabel.Text
+	if text == "Odd" or text == "Even" or text == "1x" then
+		-- Logique si nécessaire
+	end
+    
+    -- 5. Initialisation des trois états principaux
+    -- State || Add || LocalSelection
+    RunService.Stepped:Connect(function()
+        if SelectionFrame:IsA("SelectionFrame") then
+            -- Peut ajouter du comportement ici
+        end
+    end)
+    
+    -- 6. Petit timer pour vider le UI si le trade finit
+    wait(3)
+    if SelectionFrame:IsA("SelectionFrame") then
+        -- Optionnel : Cocher la case && Sélectionne clic ça si besoin
+    end
+end
+
+-- 7. Fonction d'appel central
+local function GetKids(parent)
+	local kids = {}
+	for _, v in pairs(parent:GetDescendants()) do
+		kids[v] = kids[v] or {}
+	end
+	for _, v in pairs(parent:GetDescendants()) do
+		kids[v][#kids[v] + 1] = v
+	end
+	return kids
+end
+
+-- Le "Cerveau" du script
+local function RunScript()
+	-- On attend que le UI soit stable
+	wait(0.5)
+	
+	-- 1. Trouver le cadre de sélection cible (Le nom change parfois selon l'évent)
+	-- On cherche un cadre nommé "Amanat" ou "Selection"
+	local TargetFrame = SelectionFrame -- Si c'est un "Clone", on peut ajuster
+	
+	-- 2. Si le cadre est "Even" (cf or cnr)
+	if TargetFrame ~= nil then
+		local children = TargetFrame:GetChildren()
+		
+		-- On active la zone de boutons sous le cadre
+		if BtnZone then
+			BtnZone.Position = UDim2.new(0, 0, 0, 30) -- Décalage bas
+			BtnZone.Size = UDim2.new(1, -20, 0, 0)
+			BtnZone.Visible = true
+		end
+		
+		-- On adjoute les 3 boutons principaux
+		local Cancel = CancelBtn
+		local Add = Instance.new("TextButton")
+		local Name = Instance.new("TextButton") -- Pour le nom du personnage
+		
+		-- Si le bouton d'ajout est caché, on l'active
+		if Add then Add
